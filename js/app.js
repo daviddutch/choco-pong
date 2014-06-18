@@ -23,8 +23,8 @@ window.cancelRequestAnimFrame = ( function() {
 // Initialize canvas and required variables
 var canvas = document.getElementById("canvas"),
 		ctx = canvas.getContext("2d"), // Create canvas context
-		W = window.innerWidth, // Window's width
-		H = window.innerHeight, // Window's height
+		W = canvas.width, // Window's width
+		H = canvas.height, // Window's height
 		particles = [], // Array containing particles
 		ball = {}, // Ball object
 		paddles = [2], // Array containing two paddles
@@ -39,7 +39,11 @@ var canvas = document.getElementById("canvas"),
 		restartBtn = {}, // Restart button object
 		over = 0, // flag varialbe, cahnged when the game is over
 		init, // variable to initialize animation
-		paddleHit;
+		paddleHit,
+        paddleImage = new Image()
+        ;
+paddleImage.src = 'images/choco-paddle.png';
+
 
 // Add mousemove and mousedown events to the canvas
 canvas.addEventListener("mousemove", trackPosition, true);
@@ -49,20 +53,36 @@ canvas.addEventListener("mousedown", btnClick, true);
 collision = document.getElementById("collide");
 
 // Set the canvas's height and width to full screen
-canvas.width = W;
-canvas.height = H;
+//canvas.width = W;
+//canvas.height = H;
 
 // Function to paint canvas
 function paintCanvas() {
-	ctx.fillStyle = "black";
+	ctx.fillStyle = "#349747";
 	ctx.fillRect(0, 0, W, H);
+
+	ctx.fillStyle = "#ffffff";
+
+    var lineWidth = 10;
+
+    // Draw central line
+    var x = W/2 - lineWidth/2;
+    var y = 0;
+	ctx.fillRect(x, y, lineWidth, H);
+
+    // Draw table borders
+    ctx.lineWidth = lineWidth;
+    ctx.strokeStyle = "#ffffff";
+
+
+	ctx.strokeRect(0, 0, W, H);
 }
 
 // Function for creating paddles
 function Paddle(pos) {
 	// Height and width
-	this.h = 5;
-	this.w = 150;
+	this.h = 50;
+	this.w = 130;
 	
 	// Paddle's position
 	this.x = W/2 - this.w/2;
@@ -78,20 +98,18 @@ paddles.push(new Paddle("top"));
 ball = {
 	x: 50,
 	y: 50, 
-	r: 5,
+	r: 10,
 	c: "white",
 	vx: 4,
 	vy: 8,
+    ballImage: new Image(),
 	
 	// Function for drawing ball on canvas
 	draw: function() {
-		ctx.beginPath();
-		ctx.fillStyle = this.c;
-		ctx.arc(this.x, this.y, this.r, 0, Math.PI*2, false);
-		ctx.fill();
+        ctx.drawImage(this.ballImage, this.x, this.y);
 	}
 };
-
+ball.ballImage.src = 'images/pomodoro-ball.png';
 
 // Start Button object
 startBtn = {
@@ -101,14 +119,13 @@ startBtn = {
 	y: H/2 - 25,
 	
 	draw: function() {
-		ctx.strokeStyle = "white";
-		ctx.lineWidth = "2";
-		ctx.strokeRect(this.x, this.y, this.w, this.h);
+		ctx.fillStyle = "black";
+		ctx.fillRect(this.x, this.y, this.w, this.h);
 		
 		ctx.font = "18px Arial, sans-serif";
 		ctx.textAlign = "center";
 		ctx.textBaseline = "middle";
-		ctx.fillStlye = "white";
+		ctx.fillStyle = "white";
 		ctx.fillText("Start", W/2, H/2 );
 	}
 };
@@ -121,14 +138,13 @@ restartBtn = {
 	y: H/2 - 50,
 	
 	draw: function() {
-		ctx.strokeStyle = "white";
-		ctx.lineWidth = "2";
-		ctx.strokeRect(this.x, this.y, this.w, this.h);
+		ctx.fillStyle = "black";
+		ctx.fillRect(this.x, this.y, this.w, this.h);
 		
 		ctx.font = "18px Arial, sans-serif";
 		ctx.textAlign = "center";
 		ctx.textBaseline = "middle";
-		ctx.fillStlye = "white";
+		ctx.fillStyle = "white";
 		ctx.fillText("Restart", W/2, H/2 - 25 );
 	}
 };
@@ -150,8 +166,10 @@ function draw() {
 	for(var i = 0; i < paddles.length; i++) {
 		p = paddles[i];
 		
-		ctx.fillStyle = "white";
+		ctx.fillStyle = "black";
 		ctx.fillRect(p.x, p.y, p.w, p.h);
+
+        ctx.drawImage(paddleImage, p.x, p.y, p.w, p.h);
 	}
 	
 	ball.draw();
@@ -170,8 +188,9 @@ function increaseSpd() {
 
 // Track the position of mouse cursor
 function trackPosition(e) {
-	mouse.x = e.pageX;
-	mouse.y = e.pageY;
+    var rect = canvas.getBoundingClientRect();
+    mouse.x = e.clientX - rect.left;
+    mouse.y = e.clientY - rect.top;
 }
 
 // Function to update positions, score and everything.
@@ -258,7 +277,7 @@ function update() {
 //the paddles
 function collides(b, p) {
 	if(b.x + ball.r >= p.x && b.x - ball.r <=p.x + p.w) {
-		if(b.y >= (p.y - p.h) && p.y > 0){
+		if(b.y >= (p.y - ball.r) && p.y > 0){
 			paddleHit = 1;
 			return true;
 		}
@@ -277,7 +296,7 @@ function collideAction(ball, p) {
 	ball.vy = -ball.vy;
 	
 	if(paddleHit == 1) {
-		ball.y = p.y - p.h;
+		ball.y = p.y - ball.r;
 		particlePos.y = ball.y + ball.r;
 		multiplier = -1;	
 	}
@@ -367,9 +386,14 @@ function startScreen() {
 function btnClick(e) {
 	
 	// Variables for storing mouse position on click
-	var mx = e.pageX,
-			my = e.pageY;
-	
+	var mx = e.pageX, my = e.pageY;
+
+    // Variables for storing mouse position on click
+    var rect = canvas.getBoundingClientRect();
+    mx = e.clientX - rect.left;
+    my = e.clientY - rect.top;
+
+
 	// Click start button
 	if(mx >= startBtn.x && mx <= startBtn.x + startBtn.w) {
 		animloop();
