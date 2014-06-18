@@ -42,8 +42,16 @@ var canvas = document.getElementById("canvas"),
 		paddleHit,
         paddleImage = new Image()
         ;
-paddleImage.src = 'images/choco-paddle.png';
 
+paddleImage.onload = function() {
+    var p;
+    for(var i = 0; i < paddles.length; i++) {
+        p = paddles[i];
+        ctx.drawImage(paddleImage, p.x, p.y, p.w, p.h);
+    }
+};
+
+paddleImage.src = 'images/choco-paddle.png';
 
 // Add mousemove and mousedown events to the canvas
 canvas.addEventListener("mousemove", trackPosition, true);
@@ -70,12 +78,20 @@ function paintCanvas() {
     var y = 0;
 	ctx.fillRect(x, y, lineWidth, H);
 
+    // Draw table net
+    ctx.fillStyle = "#CCCCCC";
+    var netWidth = 2;
+    x = 0;
+    y = H/2 - netWidth/2;
+	ctx.fillRect(x, y, W, netWidth);
+
     // Draw table borders
     ctx.lineWidth = lineWidth;
     ctx.strokeStyle = "#ffffff";
 
-
 	ctx.strokeRect(0, 0, W, H);
+
+    ctx.fillStyle = "#000000";
 }
 
 // Function for creating paddles
@@ -108,6 +124,9 @@ ball = {
 	draw: function() {
         ctx.drawImage(this.ballImage, this.x, this.y);
 	}
+};
+ball.ballImage.onload = function() {
+  ball.draw();
 };
 ball.ballImage.src = 'images/pomodoro-ball.png';
 
@@ -165,9 +184,6 @@ function draw() {
 	paintCanvas();
 	for(var i = 0; i < paddles.length; i++) {
 		p = paddles[i];
-		
-		ctx.fillStyle = "black";
-		ctx.fillRect(p.x, p.y, p.w, p.h);
 
         ctx.drawImage(paddleImage, p.x, p.y, p.w, p.h);
 	}
